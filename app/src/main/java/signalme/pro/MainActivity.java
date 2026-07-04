@@ -123,8 +123,6 @@ public class MainActivity extends AppCompatActivity {
                 return true;
             }
             @Override
-            public void onPageStarted(WebView view, String url, Bitmap favicon) { }
-            @Override
             public void onPageFinished(WebView view, String url) {
                 // Force a mobile-friendly viewport + prevent horizontal stretch on tablets/foldables.
                 String viewportJs = "(function(){try{"
