@@ -23,11 +23,11 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
-// SwipeRefreshLayout removed — pull-to-refresh disabled by request.
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 public class MainActivity extends AppCompatActivity {
     private WebView webView;
-    // refresh layout removed
+    private SwipeRefreshLayout swipeRefresh;
     private ValueCallback<Uri[]> fileChooserCallback;
     private ActivityResultLauncher<Intent> fileChooserLauncher;
     private PermissionRequest pendingWebPermissionRequest;
@@ -56,8 +56,10 @@ public class MainActivity extends AppCompatActivity {
             decor.setSystemUiVisibility(flags);
         } catch (Throwable ignored) {}
         setContentView(R.layout.activity_main);
-        webView = findViewById(R.id.webview);
-        // Kill pull-to-refresh / overscroll glow so scrolling never triggers a reload.
+       webView = findViewById(R.id.webview);
+        swipeRefresh = findViewById(R.id.swipe_refresh);
+        swipeRefresh.setOnRefreshListener(() -> webView.reload());
+        swipeRefresh.setColorSchemeResources(android.R.color.holo_blue_bright);
         webView.setOverScrollMode(View.OVER_SCROLL_NEVER);
 
         createNotificationChannel();
@@ -121,7 +123,7 @@ public class MainActivity extends AppCompatActivity {
                 try { startActivity(new Intent(Intent.ACTION_VIEW, uri)); } catch (Exception ignored) {}
                 return true;
             }
-            @Override
+           @Override
             public void onPageFinished(WebView view, String url) {
                 // Force a mobile-friendly viewport + prevent horizontal stretch on tablets/foldables.
                 String viewportJs = "(function(){try{"
@@ -140,8 +142,8 @@ public class MainActivity extends AppCompatActivity {
                         + "if(window.onFcmToken) window.onFcmToken('" + saved + "');";
                     view.evaluateJavascript(js, null);
                 }
+                if (swipeRefresh != null) swipeRefresh.setRefreshing(false);
             }
-        });
 
         // Listen for new FCM tokens and push them into the WebView live
         androidx.localbroadcastmanager.content.LocalBroadcastManager.getInstance(this)
