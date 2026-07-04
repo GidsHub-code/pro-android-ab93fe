@@ -59,7 +59,6 @@ public class MainActivity extends AppCompatActivity {
         webView = findViewById(R.id.webview);
         // Kill pull-to-refresh / overscroll glow so scrolling never triggers a reload.
         webView.setOverScrollMode(View.OVER_SCROLL_NEVER);
-        try { webView.setNestedScrollingEnabled(false); } catch (Throwable ignored) {}
 
         createNotificationChannel();
         requestRuntimePermissions();
