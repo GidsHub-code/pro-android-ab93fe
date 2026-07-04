@@ -122,6 +122,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onPageStarted(WebView view, String url, Bitmap favicon) { }
             @Override
+            @Override
             public void onPageFinished(WebView view, String url) {
                 // Force a mobile-friendly viewport + prevent horizontal stretch on tablets/foldables.
                 String viewportJs = "(function(){try{"
@@ -130,10 +131,25 @@ public class MainActivity extends AppCompatActivity {
                     + "m.setAttribute('content','width=device-width,initial-scale=1,maximum-scale=5,viewport-fit=cover');"
                     + "var s=document.getElementById('__git2app_fix');"
                     + "if(!s){s=document.createElement('style');s.id='__git2app_fix';"
-                    + "s.innerHTML='html,body{max-width:100vw!important;overflow-x:hidden!important;overscroll-behavior:none!important;-webkit-text-size-adjust:100%!important;}img,video,iframe,table{max-width:100%!important;height:auto!important;}';"
+                    + "s.innerHTML='html,body{max-width:100vw!important;overflow-x:hidden!important;overscroll-behavior:none!important;touch-action:pan-y!important;-webkit-text-size-adjust:100%!important;}img,video,iframe,table{max-width:100%!important;height:auto!important;}';"
                     + "document.head.appendChild(s);} "
                     + "}catch(e){}})();";
                 view.evaluateJavascript(viewportJs, null);
+                // Block pull-down-at-top gestures so no native or site-level "pull to refresh"
+                // can ever fire while the user is just scrolling. Attached once per page load.
+                String noRefreshJs = "(function(){try{"
+                    + "if(window.__git2app_norefresh) return; window.__git2app_norefresh = true;"
+                    + "var startY = 0;"
+                    + "document.addEventListener('touchstart', function(e){"
+                    + "  if(e.touches && e.touches.length===1){ startY = e.touches[0].clientY; }"
+                    + "}, {passive:true});"
+                    + "document.addEventListener('touchmove', function(e){"
+                    + "  var scrollTop = window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0;"
+                    + "  var y = e.touches && e.touches[0] ? e.touches[0].clientY : startY;"
+                    + "  if (scrollTop <= 0 && y > startY) { e.preventDefault(); }"
+                    + "}, {passive:false});"
+                    + "}catch(e){}})();";
+                view.evaluateJavascript(noRefreshJs, null);
                 String saved = getSharedPreferences("fcm", MODE_PRIVATE).getString("token", null);
                 if (saved != null) {
                     String js = "window.__FCM_TOKEN__ = '" + saved + "';"
